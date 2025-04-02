@@ -1,0 +1,14 @@
+---
+version: 1.0
+provider:
+  name: openfaas
+functions:
+  minio-notify:
+    lang: perl-mojo
+    handler: ./minio-notify
+    image: ghcr.io/tschaefer/minio-notify:0.0.1
+    build_args:
+      ADDITIONAL_PACKAGES: "build-essential"
+      ADDITIONAL_CPAN_PACKAGES: "Authen::SASL Email::Sender"
+    secrets:
+      - minio-notify

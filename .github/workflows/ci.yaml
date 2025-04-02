@@ -1,0 +1,40 @@
+---
+name: CI
+
+on:   # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup faas-cli
+        run: |
+          curl -sSL https://cli.openfaas.com | sh
+      - name: Install cpanminus
+        run: |
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt install cpanminus
+      - name: Install dependencies
+        run: |
+          sudo cpanm --notest --installdeps .
+      - name: Pull template
+        run: |
+          git clone https://github.com/tschaefer/openfaas-perl-mojo-template -b full-mojo _template
+          mv _template/template .
+          rm -rf _template
+      - name: Run tests
+        run: |
+          prove -v t
+        env:
+          MINIO_NOTIFY_PROVE_VERBOSE: ${{ vars.MINIO_NOTIFY_PROVE_VERBOSE }}

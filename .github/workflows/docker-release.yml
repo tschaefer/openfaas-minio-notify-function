@@ -1,0 +1,38 @@
+---
+name: Docker Release
+
+on:   # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup faas-cli
+        run: |
+          curl -sSL https://cli.openfaas.com | sh
+      # TODO: Check if this is doable with the docker login action
+      - name: Docker Login
+        env:
+          GHCR_AUTH_TOKEN: ${{ secrets.GHCR_AUTH_TOKEN }}
+        run: |
+          echo "$GHCR_AUTH_TOKEN" | docker login \
+            ghcr.io \
+            --username ${{ github.actor }} \
+            --password-stdin
+      - name: Pull template
+        run: |
+          git clone https://github.com/tschaefer/openfaas-perl-mojo-template -b full-mojo _template
+          mv _template/template .
+          rm -rf _template
+      # TODO: Fix and add arm64 build. cpanm fails with: `gzip: stdin: not in gzip format`
+      - name: Build and Push
+        run: |
+          faas-cli publish \
+            --platforms linux/amd64 \
+            --build-label org.opencontainers.image.source=https://github.com/tschaefer/openfaas-minio-notify-function
