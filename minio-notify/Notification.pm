@@ -1,8 +1,8 @@
 package Notification;
 
-use feature qw(try);
-
 use Mojo::Base -base;
+use feature qw(try);
+no warnings qw(uninitialized);
 
 use Authen::SASL;
 use MIME::Base64 qw(encode_base64);

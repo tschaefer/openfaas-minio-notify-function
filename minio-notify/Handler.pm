@@ -1,7 +1,6 @@
 package Handler;
 
 use Mojo::Base -base;
-
 use feature qw(try);
 no warnings qw(uninitialized);
 
@@ -9,6 +8,7 @@ use Mojo::File qw(path);
 use Mojo::JSON qw(decode_json);
 
 use Authorization;
+use Event;
 use Notification;
 
 has 'log';
@@ -29,22 +29,15 @@ sub run {
         ->log($self->log);
     return { json => 'Unauthorized', status => 401 } unless $auth->permitted;
 
-    my $event = do {
-        try {
-            decode_json($request->body);
-        } catch($error) {
-            ($error) = split / at/, $error;
-
-            $self->log->error("Failed to decode request: $error");
-            undef;
-        }
-    };
-    return { json => 'Bad Request', status => 400 } unless $event;
+    my $event = Event->new
+        ->payload($request->body)
+        ->log($self->log);
+    return { json => 'Bad Request', status => 400 } unless $event->parse;
 
     my $roles = $request->headers->header('X-Notification-Target') eq 'Logger' ? ['NotificationToLog'] : [];
     my $notification = Notification->new->with_roles(@$roles)
         ->config($self->config)
-        ->event($event)
+        ->event($event->data)
         ->headers($request->headers)
         ->log($self->log);
     return { json => 'Server Error', status => 500 } unless $notification->emit;
