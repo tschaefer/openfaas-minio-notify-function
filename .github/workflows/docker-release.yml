@@ -13,11 +13,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
       - name: Setup faas-cli
         run: |
           curl -sSL https://cli.openfaas.com | sh
       # TODO: Check if this is doable with the docker login action
-      - name: Docker Login
+      - name: GHCR Login
         env:
           GHCR_AUTH_TOKEN: ${{ secrets.GHCR_AUTH_TOKEN }}
         run: |
@@ -30,9 +32,8 @@ jobs:
           git clone https://github.com/tschaefer/openfaas-perl-mojo-template -b full-mojo _template
           mv _template/template .
           rm -rf _template
-      # TODO: Fix and add arm64 build. cpanm fails with: `gzip: stdin: not in gzip format`
       - name: Build and Push
         run: |
           faas-cli publish \
-            --platforms linux/amd64 \
+            --platforms linux/amd64,linux/arm64 \
             --build-label org.opencontainers.image.source=https://github.com/tschaefer/openfaas-minio-notify-function
