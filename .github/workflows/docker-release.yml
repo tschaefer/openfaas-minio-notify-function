@@ -18,15 +18,12 @@ jobs:
       - name: Setup faas-cli
         run: |
           curl -sSL https://cli.openfaas.com | sh
-      # TODO: Check if this is doable with the docker login action
-      - name: GHCR Login
-        env:
-          GHCR_AUTH_TOKEN: ${{ secrets.GHCR_AUTH_TOKEN }}
-        run: |
-          echo "$GHCR_AUTH_TOKEN" | docker login \
-            ghcr.io \
-            --username ${{ github.actor }} \
-            --password-stdin
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_AUTH_TOKEN }}
       - name: Pull template
         run: |
           git clone https://github.com/tschaefer/openfaas-perl-mojo-template -b full-mojo _template
