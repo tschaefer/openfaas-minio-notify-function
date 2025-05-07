@@ -33,4 +33,6 @@ jobs:
         run: |
           faas-cli publish \
             --platforms linux/amd64,linux/arm64 \
-            --build-label org.opencontainers.image.source=https://github.com/tschaefer/openfaas-minio-notify-function
+            --build-label org.opencontainers.image.source=https://github.com/tschaefer/openfaas-minio-notify-function \
+            --build-label org.opencontainers.image.licenses=MIT \
+            --build-label org.opencontainers.image.description="OpenFaaS Minio bucket event notification"
